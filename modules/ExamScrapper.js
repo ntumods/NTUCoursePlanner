@@ -1,6 +1,8 @@
 const fetch = require("node-fetch");
 const qs = require("querystring");
 const fs = require("fs");
+const cheerio = require("cheerio");
+const titleize = require("titleize");
 
 class ExamScrapper {
     constructor() {
@@ -29,11 +31,33 @@ class ExamScrapper {
         });
 
         let scheduleDom = await res.text()
-        fs.writeFileSync("./data/exams.html", scheduleDom);
+        return scheduleDom.replace(/\n/g, "");
     }
 
-    async parseFile() {
+    async parseSchedule({ file = null, str = null }) {
+        let data = null;
+        if (file !== null) {
+            data = fs.readFileSync(file, "utf-8");
+        } else {
+            data = str;
+        }
 
+        let exams = [];
+        let $ = cheerio.load(data);
+        $("table").eq(1).find("tbody").children().each((trIndex, trChildren) => {
+            if (trIndex === 0) return;
+            let rowChildren = $(trChildren).children();
+            exams.push({
+                "date": $(rowChildren[0]).text(),
+                "day": $(rowChildren[1]).text(),
+                "time": $(rowChildren[2]).text(),
+                "index": $(rowChildren[3]).text(),
+                "title": titleize($(rowChildren[4]).text()),
+                "duration": $(rowChildren[5]).text()
+            });
+        });
+
+        return exams;
     }
 }
 
