@@ -32,7 +32,7 @@ class ModulesScrapper {
         let classes = [];
         let data = null;
         if (file !== null) {
-            data = fs.readFileSync("./data/schedule.html", "utf8");
+            data = fs.readFileSync(file, "utf8");
         } else {
             data = str;
         }
